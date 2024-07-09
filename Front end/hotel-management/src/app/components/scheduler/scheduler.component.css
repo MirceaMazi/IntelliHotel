@@ -1,0 +1,16 @@
+.calendar-wrapper {
+  height: 80vh;
+  margin: 1rem 0;
+}
+
+:host ::ng-deep .current-event {
+  background-color: #689f38;
+}
+
+:host ::ng-deep .future-event {
+  background-color: #2196f3;
+}
+
+:host ::ng-deep .past-event {
+  background-color: gray;
+}

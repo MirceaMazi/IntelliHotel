@@ -1,0 +1,36 @@
+:host ::ng-deep .p-card {
+  width: 14.5rem;
+  height: 15vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+:host ::ng-deep .p-card-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+:host ::ng-deep .p-badge {
+  position: absolute;
+  left: 84%;
+}
+
+:host ::ng-deep .warning {
+  background-color: #ffa726;
+}
+
+:host ::ng-deep .danger {
+  background-color: #f44336;
+}
+
+p {
+  font-size: 1.3rem;
+  margin: 0;
+  text-align: center;
+}

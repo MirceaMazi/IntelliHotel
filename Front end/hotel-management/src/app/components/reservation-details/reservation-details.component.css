@@ -1,0 +1,17 @@
+:host ::ng-deep .card-wrapper {
+  width: 90vw;
+  border: solid 3px var(--accent);
+  border-radius: 4px;
+}
+
+:host ::ng-deep .p-card-content {
+  padding: 0;
+}
+
+.room-wrapper {
+  display: flex;
+}
+
+p {
+  margin-top: 0;
+}

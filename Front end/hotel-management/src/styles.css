@@ -1,0 +1,18 @@
+@import "primeng/resources/themes/md-dark-deeppurple/theme.css";
+@import "primeng/resources/primeng.css";
+@import "primeicons/primeicons.css";
+
+:root {
+  --primary: #5c415d;
+  --accent: #bc9245;
+  --background: #121212;
+  --grey: #1e1e1e;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  --font-family: "Inter";
+  background-color: var(--background);
+}

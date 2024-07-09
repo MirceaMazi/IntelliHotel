@@ -1,0 +1,13 @@
+:host ::ng-deep .p-menuitem-link {
+  display: flex;
+  gap: 0.5rem;
+}
+
+img {
+  height: 2rem;
+}
+
+:host ::ng-deep .blended-btn {
+  background-color: var(--grey);
+  color: white;
+}
