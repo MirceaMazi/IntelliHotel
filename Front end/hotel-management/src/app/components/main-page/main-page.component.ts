@@ -10,6 +10,7 @@ import { MessageService } from 'primeng/api';
 import { AuthService } from '../../services/auth.service';
 
 import { Room, States } from '../../interfaces/room';
+import { User, userRoles } from '../../interfaces/user';
 
 import { MenuItem } from 'primeng/api';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -39,6 +40,7 @@ import { ToastModule } from 'primeng/toast';
 
     <p-toast [life]="1000" position="bottom-right"></p-toast>
 
+    @if(user && (user.role === userRoles.Admin)){
     <app-add-room *ngIf="roomService.isFormOpen"></app-add-room>
     <app-add-reservation
       *ngIf="reservationService.isFormOpen"
@@ -61,6 +63,9 @@ import { ToastModule } from 'primeng/toast';
       styleClass="nth-btn"
       (click)="this.reservationService.toggleReservationForm()"
     ></p-button>
+    } @else {
+    <div class="spacer"></div>
+    }
 
     <div class="rooms-container">
       <ng-container *ngIf="rooms$ | async as rooms; else loading">
@@ -80,8 +85,9 @@ import { ToastModule } from 'primeng/toast';
   styleUrls: ['./main-page.component.css'],
 })
 export class MainPageComponent implements OnInit {
-  user: any;
+  user!: User;
   rooms$!: Observable<Room[]>;
+  userRoles = userRoles;
   items: MenuItem[] | undefined;
   selectedRoom: Room | null = null;
   @ViewChild('cm') cm!: ContextMenu;
@@ -95,8 +101,8 @@ export class MainPageComponent implements OnInit {
 
   ngOnInit() {
     this.authService.getUserProfile(localStorage.getItem('token')!).subscribe({
-      next: (user) => {
-        console.log(user);
+      next: (user: User) => {
+        this.user = user;
       },
     });
 

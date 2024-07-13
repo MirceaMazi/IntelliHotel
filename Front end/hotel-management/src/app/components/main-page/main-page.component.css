@@ -35,3 +35,7 @@ app-add-reservation {
   transform: translate(-50%, -50%);
   z-index: 1;
 }
+
+.spacer {
+  margin: 2rem 0;
+}
