@@ -3,7 +3,7 @@ import Reservation from "../models/reservationModel.js";
 
 const getAllRooms = async (req, res) => {
   try {
-    const rooms = await Room.find();
+    const rooms = await Room.find().populate("currentReservation");
 
     if (rooms.length >= 1) {
       res.status(200).json(rooms);
@@ -17,7 +17,9 @@ const getAllRooms = async (req, res) => {
 
 const getRoomById = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id);
+    const room = await Room.findById(req.params.id).populate(
+      "currentReservation"
+    );
 
     if (room) {
       res.status(200).json(room);
@@ -48,7 +50,7 @@ const createRoom = async (req, res) => {
 };
 
 const updateRoom = async (req, res) => {
-  const { name, type, details, state } = req.body;
+  const { name, type, details, state, currentReservation } = req.body;
 
   try {
     const room = await Room.findById(req.params.id);
@@ -58,6 +60,7 @@ const updateRoom = async (req, res) => {
       room.type = type || room.type;
       room.details = details || room.details;
       room.state = state || room.state;
+      room.currentReservation = currentReservation || room.currentReservation;
 
       const updatedRoom = await room.save();
       res.status(200).json(updatedRoom);

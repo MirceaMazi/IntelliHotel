@@ -73,22 +73,22 @@ import { ToastModule } from 'primeng/toast';
       </p-fieldset>
 
       <p-fieldset legend="Detalii cazare">
-        <div *ngIf="closestReservation; else noReservation">
+        <div *ngIf="room.currentReservation; else noReservation">
           @if(this.clientService.isFormOpen){
           <app-add-client
-            [reservations]="[closestReservation]"
+            [reservations]="[room.currentReservation]"
           ></app-add-client>
           }
 
           <div class="field-element">
             <p class="field-title">Nume persoană:&nbsp;</p>
-            <p>{{ closestReservation.name }}</p>
+            <p>{{ room.currentReservation.name }}</p>
           </div>
           <div class="field-element">
             <p class="field-title">Durată sejur:&nbsp;</p>
             <p>
-              {{ closestReservation.startDate | date : 'shortDate' }} -
-              {{ closestReservation.endDate | date : 'shortDate' }}
+              {{ room.currentReservation.startDate | date : 'shortDate' }} -
+              {{ room.currentReservation.endDate | date : 'shortDate' }}
             </p>
           </div>
 
@@ -105,7 +105,7 @@ import { ToastModule } from 'primeng/toast';
             label="Check-out"
             [raised]="true"
             styleClass="state-btn"
-            (click)="doCheckOut()"
+            (click)="doCheckOut(room)"
           ></p-button>
         </div>
         <ng-template #noReservation>
@@ -122,7 +122,6 @@ import { ToastModule } from 'primeng/toast';
 export class RoomDetailsComponent {
   room$!: Observable<Room>;
   reservations!: Reservation[];
-  closestReservation!: Reservation | null;
   states = States;
   client: Client | null = null;
 
@@ -137,7 +136,9 @@ export class RoomDetailsComponent {
     this.loadRoomDetails();
 
     this.roomService.roomsChanged$.subscribe(() => {
-      this.loadRoomDetails();
+      setTimeout(() => {
+        this.loadRoomDetails();
+      }, 500);
     });
   }
 
@@ -156,13 +157,19 @@ export class RoomDetailsComponent {
           reservation.rooms.some((r) => r._id === room._id)
         );
 
-        this.closestReservation = this.findClosestReservation();
+        room.currentReservation = this.findClosestReservation(room);
       });
     }
   }
 
-  findClosestReservation() {
-    if (this.reservations && this.reservations.length > 0) {
+  findClosestReservation(room: Room) {
+    if (
+      this.reservations &&
+      this.reservations.length > 0 &&
+      !room.currentReservation
+    ) {
+      const token = localStorage.getItem('token')!;
+
       const currentDate = new Date();
       let closestReservation: Reservation | null = null;
       let closestDifference = Infinity;
@@ -172,6 +179,8 @@ export class RoomDetailsComponent {
         let endDate = new Date(reservation.endDate);
 
         if (currentDate > startDate && currentDate < endDate) {
+          room.currentReservation = reservation;
+          this.roomService.editRoom(token, room._id!, room).subscribe();
           return reservation;
         }
 
@@ -186,6 +195,9 @@ export class RoomDetailsComponent {
           }
         }
       }
+
+      room.currentReservation = closestReservation!;
+      this.roomService.editRoom(token, room._id!, room).subscribe();
       return closestReservation;
     }
     return null;
@@ -199,10 +211,11 @@ export class RoomDetailsComponent {
       room.state = this.states.IsBeingCleaned;
     } else if (room.state === this.states.IsBeingCleaned) {
       const currentDate = new Date();
+      console.log(room.currentReservation);
       if (
-        this.closestReservation &&
-        this.closestReservation.startDate <= currentDate &&
-        this.closestReservation.endDate >= currentDate
+        room.currentReservation &&
+        new Date(room.currentReservation.startDate) <= currentDate &&
+        new Date(room.currentReservation.endDate) >= currentDate
       ) {
         room.state = this.states.Occupied;
       } else {
@@ -216,16 +229,54 @@ export class RoomDetailsComponent {
     }
   }
 
-  doCheckOut() {
-    if (this.closestReservation) {
+  doCheckOut(room: Room) {
+    if (room.currentReservation) {
       const token = localStorage.getItem('token')!;
 
-      let pairedRooms = this.closestReservation?.rooms;
+      this.reservations = this.reservations
+        .sort((a, b) => {
+          return (
+            new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+          );
+        })
+        .filter((reservation) =>
+          reservation.rooms.some((r) => r._id === room._id)
+        );
 
-      for (let room of pairedRooms) {
-        room.state = States.NeedsCleaning;
-        this.roomService.editRoom(token, room._id!, room).subscribe();
-      }
+      room.currentReservation.rooms.forEach((reservedRoom) => {
+        // @ts-ignore
+        this.roomService.getRoomById(token, reservedRoom).subscribe({
+          next: (updatedRoom) => {
+            const currentIndex = this.reservations.findIndex(
+              (reservation) => reservation._id === room.currentReservation?._id
+            );
+
+            if (
+              currentIndex !== -1 &&
+              currentIndex < this.reservations.length - 1
+            ) {
+              const nextReservation = this.reservations[currentIndex + 1];
+
+              updatedRoom.state = States.NeedsCleaning;
+              updatedRoom.currentReservation = nextReservation;
+              this.roomService
+                .editRoom(token, updatedRoom._id!, updatedRoom)
+                .subscribe();
+            } else {
+              this.roomService
+                .getRoomById(token, updatedRoom._id!)
+                .subscribe((updatedRoom2) => {
+                  console.log(updatedRoom2);
+                  updatedRoom2.currentReservation = null;
+                  console.log(updatedRoom2);
+                  this.roomService
+                    .editRoom(token, updatedRoom2._id!, updatedRoom)
+                    .subscribe();
+                });
+            }
+          },
+        });
+      });
 
       this.roomService.notifyRoomsChanged();
     }

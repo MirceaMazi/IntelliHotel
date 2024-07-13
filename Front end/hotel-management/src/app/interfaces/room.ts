@@ -1,3 +1,5 @@
+import { Reservation } from './reservation';
+
 export enum States {
   Free = 'Cameră liberă',
   Occupied = 'Cameră ocupată',
@@ -12,4 +14,5 @@ export interface Room {
   type: string;
   details?: string;
   state: States;
+  currentReservation?: Reservation | null;
 }

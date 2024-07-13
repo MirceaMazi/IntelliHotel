@@ -149,8 +149,15 @@ export class AddClientComponent {
       let reservedRooms = this.reservations[0].rooms;
 
       for (let room of reservedRooms) {
-        room.state = States.Occupied;
-        this.roomService.editRoom(token, room._id!, room).subscribe();
+        // @ts-ignore
+        this.roomService.getRoomById(token, room).subscribe({
+          next: (roomUpdate) => {
+            roomUpdate.state = States.Occupied;
+            this.roomService
+              .editRoom(token, roomUpdate._id!, roomUpdate)
+              .subscribe();
+          },
+        });
       }
 
       this.clientService.createClient(token, newClient).subscribe({

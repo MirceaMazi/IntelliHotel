@@ -26,6 +26,10 @@ const roomSchema = new mongoose.Schema({
     enum: Object.values(roomStates), // Ensures the value must be one of the enum values
     required: [true, "Please input room state"],
   },
+  currentReservation: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Reservation",
+  },
 });
 
 const Room = mongoose.model("Room", roomSchema);

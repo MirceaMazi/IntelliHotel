@@ -25,41 +25,43 @@ import { RatingModule } from 'primeng/rating';
     InputTextModule,
     RatingModule,
   ],
-  template: `<p-card>
-    <ng-template pTemplate="header">
-      <p class="header-text">Cum a fost experința ta?</p>
-    </ng-template>
+  template: ` <div class="body-wrapper">
+    <p-card>
+      <ng-template pTemplate="header">
+        <p class="header-text">Cum a fost experința ta?</p>
+      </ng-template>
 
-    <form
-      [formGroup]="addRatingForm"
-      (ngSubmit)="onSubmitAddRating()"
-      class="form-body"
-    >
-      <div class="rating-container">
-        <label for="rating">Numarul de stele</label>
-        <p-rating id="rating" formControlName="rating" [cancel]="false" />
-      </div>
+      <form
+        [formGroup]="addRatingForm"
+        (ngSubmit)="onSubmitAddRating()"
+        class="form-body"
+      >
+        <div class="rating-container">
+          <label for="rating">Numarul de stele</label>
+          <p-rating id="rating" formControlName="rating" [cancel]="false" />
+        </div>
 
-      <p-floatLabel>
-        <textarea
-          id="details"
-          rows="5"
-          cols="30"
-          pInputTextarea
-          formControlName="details"
-        >
-        </textarea>
-        <label for="details">Descrie-ne experiența ta(opțional)</label>
-      </p-floatLabel>
+        <p-floatLabel>
+          <textarea
+            id="details"
+            rows="5"
+            cols="25"
+            pInputTextarea
+            formControlName="details"
+          >
+          </textarea>
+          <label for="details">Descrie-ne experiența ta(opțional)</label>
+        </p-floatLabel>
 
-      <p-button
-        label="Adaugă recenzie"
-        [raised]="true"
-        type="submit"
-        [disabled]="!addRatingForm.valid"
-      ></p-button>
-    </form>
-  </p-card>`,
+        <p-button
+          label="Adaugă recenzie"
+          [raised]="true"
+          type="submit"
+          [disabled]="!addRatingForm.valid"
+        ></p-button>
+      </form>
+    </p-card>
+  </div>`,
   styleUrl: './rating-form.component.css',
 })
 export class RatingFormComponent {
