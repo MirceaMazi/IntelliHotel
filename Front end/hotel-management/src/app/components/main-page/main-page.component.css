@@ -7,16 +7,27 @@
   padding: 0 2rem 2rem;
 }
 
+.aux-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 2rem;
+}
+
+.buttons-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
 :host ::ng-deep .first-btn {
-  float: right;
-  margin: 2rem;
+  margin: 2rem 0;
   background-color: var(--accent);
 }
 
 /* Nth as in 2nd, 3rd, 4th, etc. */
 :host ::ng-deep .nth-btn {
-  float: right;
-  margin: 2rem 0 2rem 2rem;
+  margin: 2rem 0;
   background-color: var(--accent);
 }
 
@@ -38,4 +49,16 @@ app-add-reservation {
 
 .spacer {
   margin: 2rem 0;
+}
+
+:host ::ng-deep .p-selectbutton .p-button.p-highlight {
+  background: var(--accent);
+  color: black;
+}
+
+@media only screen and (max-width: 600px) {
+  .rooms-container {
+    justify-content: center;
+    align-items: center;
+  }
 }

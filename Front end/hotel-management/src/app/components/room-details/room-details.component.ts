@@ -5,11 +5,13 @@ import { ActivatedRoute } from '@angular/router';
 import { RoomService } from '../../services/room.service';
 import { ReservationsService } from '../../services/reservations.service';
 import { ClientService } from '../../services/client.service';
+import { AuthService } from '../../services/auth.service';
 
 import { Room, States } from '../../interfaces/room';
 import { Reservation } from '../../interfaces/reservation';
 import { Client } from '../../interfaces/client';
 import { Observable, combineLatest } from 'rxjs';
+import { User, userRoles } from '../../interfaces/user';
 
 import { FieldsetModule } from 'primeng/fieldset';
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -92,6 +94,7 @@ import { ToastModule } from 'primeng/toast';
             </p>
           </div>
 
+          @if(user.role === userRoles.Admin){
           <p-button
             *ngIf="room.state === states.Free"
             label="Check-in"
@@ -107,6 +110,7 @@ import { ToastModule } from 'primeng/toast';
             styleClass="state-btn"
             (click)="doCheckOut(room)"
           ></p-button>
+          }
         </div>
         <ng-template #noReservation>
           <div class="field-element">
@@ -120,6 +124,8 @@ import { ToastModule } from 'primeng/toast';
   styleUrls: ['./room-details.component.css'],
 })
 export class RoomDetailsComponent {
+  user!: User;
+  userRoles = userRoles;
   room$!: Observable<Room>;
   reservations!: Reservation[];
   states = States;
@@ -129,10 +135,17 @@ export class RoomDetailsComponent {
     private route: ActivatedRoute,
     private roomService: RoomService,
     private reservationsService: ReservationsService,
-    protected clientService: ClientService
+    protected clientService: ClientService,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
+    this.authService.getUserProfile(localStorage.getItem('token')!).subscribe({
+      next: (user: User) => {
+        this.user = user;
+      },
+    });
+
     this.loadRoomDetails();
 
     this.roomService.roomsChanged$.subscribe(() => {
@@ -230,9 +243,9 @@ export class RoomDetailsComponent {
   }
 
   doCheckOut(room: Room) {
-    if (room.currentReservation) {
-      const token = localStorage.getItem('token')!;
+    const token = localStorage.getItem('token')!;
 
+    if (room.currentReservation) {
       this.reservations = this.reservations
         .sort((a, b) => {
           return (
@@ -263,16 +276,11 @@ export class RoomDetailsComponent {
                 .editRoom(token, updatedRoom._id!, updatedRoom)
                 .subscribe();
             } else {
+              updatedRoom.state = States.NeedsCleaning;
+              updatedRoom.currentReservation = null;
               this.roomService
-                .getRoomById(token, updatedRoom._id!)
-                .subscribe((updatedRoom2) => {
-                  console.log(updatedRoom2);
-                  updatedRoom2.currentReservation = null;
-                  console.log(updatedRoom2);
-                  this.roomService
-                    .editRoom(token, updatedRoom2._id!, updatedRoom)
-                    .subscribe();
-                });
+                .editRoom(token, updatedRoom._id!, updatedRoom)
+                .subscribe();
             }
           },
         });

@@ -1,8 +1,9 @@
 import { Component, ViewChild, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs';
+import { Observable, combineLatest, of } from 'rxjs';
+import { map, startWith } from 'rxjs';
 
 import { RoomService } from '../../services/room.service';
 import { ReservationsService } from '../../services/reservations.service';
@@ -20,6 +21,7 @@ import { RoomComponent } from '../room/room.component';
 import { ButtonModule } from 'primeng/button';
 import { ContextMenuModule, ContextMenu } from 'primeng/contextmenu';
 import { ToastModule } from 'primeng/toast';
+import { SelectButtonModule } from 'primeng/selectbutton';
 
 @Component({
   selector: 'app-main-page',
@@ -34,6 +36,8 @@ import { ToastModule } from 'primeng/toast';
     ContextMenuModule,
     AddReservationComponent,
     ToastModule,
+    SelectButtonModule,
+    FormsModule,
   ],
   template: `
     <app-navbar></app-navbar>
@@ -46,29 +50,42 @@ import { ToastModule } from 'primeng/toast';
       *ngIf="reservationService.isFormOpen"
     ></app-add-reservation>
 
-    <p-button
-      label="Adaugă cameră"
-      [raised]="true"
-      icon="pi pi-plus"
-      iconPos="right"
-      styleClass="first-btn"
-      (click)="this.roomService.toggleRoomForm()"
-    ></p-button>
+    <div class="aux-container">
+      <p-selectButton
+        [options]="viewingOptions"
+        [(ngModel)]="viewingSelection"
+        [multiple]="true"
+        optionLabel="name"
+        optionValue="value"
+        (ngModelChange)="filterRooms()"
+      />
 
-    <p-button
-      label="Adaugă rezervare"
-      [raised]="true"
-      icon="pi pi-plus"
-      iconPos="right"
-      styleClass="nth-btn"
-      (click)="this.reservationService.toggleReservationForm()"
-    ></p-button>
+      <div class="buttons-container">
+        <p-button
+          label="Adaugă cameră"
+          [raised]="true"
+          icon="pi pi-plus"
+          iconPos="right"
+          styleClass="first-btn"
+          (click)="this.roomService.toggleRoomForm()"
+        ></p-button>
+
+        <p-button
+          label="Adaugă rezervare"
+          [raised]="true"
+          icon="pi pi-plus"
+          iconPos="right"
+          styleClass="nth-btn"
+          (click)="this.reservationService.toggleReservationForm()"
+        ></p-button>
+      </div>
+    </div>
     } @else {
     <div class="spacer"></div>
     }
 
     <div class="rooms-container">
-      <ng-container *ngIf="rooms$ | async as rooms; else loading">
+      <ng-container *ngIf="filteredRooms$ | async as rooms; else loading">
         <app-room
           *ngFor="let room of rooms; trackBy: trackByRoomId"
           [room]="room"
@@ -80,17 +97,21 @@ import { ToastModule } from 'primeng/toast';
       </ng-template>
     </div>
 
+    @if(user && (user.role === userRoles.Admin)){
     <p-contextMenu #cm [model]="items" (onHide)="onHide()"></p-contextMenu>
+    }
   `,
   styleUrls: ['./main-page.component.css'],
 })
 export class MainPageComponent implements OnInit {
   user!: User;
   rooms$!: Observable<Room[]>;
+  filteredRooms$!: Observable<Room[]>;
   userRoles = userRoles;
   items: MenuItem[] | undefined;
   selectedRoom: Room | null = null;
   @ViewChild('cm') cm!: ContextMenu;
+  viewingSelection: States[] = [];
 
   constructor(
     protected roomService: RoomService,
@@ -150,7 +171,35 @@ export class MainPageComponent implements OnInit {
         .pipe(
           map((rooms) => rooms.sort((a, b) => a.name.localeCompare(b.name)))
         );
+
+      this.filteredRooms$ = combineLatest([
+        this.rooms$,
+        of(this.viewingSelection).pipe(startWith(this.viewingSelection)),
+      ]).pipe(
+        map(([rooms, viewingSelection]) => {
+          if (viewingSelection.length > 0) {
+            return rooms.filter((room) =>
+              viewingSelection.includes(room.state)
+            );
+          }
+          return rooms;
+        })
+      );
     }
+  }
+
+  filterRooms() {
+    this.filteredRooms$ = combineLatest([
+      this.rooms$,
+      of(this.viewingSelection).pipe(startWith(this.viewingSelection)),
+    ]).pipe(
+      map(([rooms, viewingSelection]) => {
+        if (viewingSelection.length > 0) {
+          return rooms.filter((room) => viewingSelection.includes(room.state));
+        }
+        return rooms;
+      })
+    );
   }
 
   trackByRoomId(index: number, room: Room): string {
@@ -158,8 +207,10 @@ export class MainPageComponent implements OnInit {
   }
 
   onContextMenu(event: MouseEvent, room: Room) {
-    this.selectedRoom = room;
-    this.cm.show(event);
+    if (this.user.role === userRoles.Admin) {
+      this.selectedRoom = room;
+      this.cm.show(event);
+    }
   }
 
   onHide() {
@@ -218,4 +269,10 @@ export class MainPageComponent implements OnInit {
       }
     }
   }
+
+  viewingOptions: any[] = [
+    { name: 'Camere ocupate', value: States.Occupied },
+    { name: 'Necesită igienizare', value: States.NeedsCleaning },
+    { name: 'Cerere client', value: States.ClientRequest },
+  ];
 }
