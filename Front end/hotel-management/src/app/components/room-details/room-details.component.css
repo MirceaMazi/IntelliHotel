@@ -35,3 +35,9 @@ app-add-client {
   background-color: var(--accent);
   float: right;
 }
+
+:host ::ng-deep .refresh-btn {
+  background-color: var(--grey);
+  float: right;
+  color: white;
+}

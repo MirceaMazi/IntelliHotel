@@ -3,6 +3,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { BACK_URL } from '../const';
 
+import { User } from '../interfaces/user';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -25,6 +27,11 @@ export class AuthService {
 
   getUserProfile(token: string): Observable<any> {
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    return this.http.get<any>(`${this.authURL}/`, {headers});
+    return this.http.get<any>(`${this.authURL}/`, { headers });
+  }
+
+  createUser(token: string, user: User): Observable<any> {
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    return this.http.post<any>(`${this.authURL}/create`, user, { headers });
   }
 }

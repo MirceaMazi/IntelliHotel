@@ -260,8 +260,8 @@ export class MainPageComponent implements OnInit {
             },
             error: () => {
               this.messageService.add({
-                severity: 'info',
-                summary: 'Success',
+                severity: 'error',
+                summary: 'Error',
                 detail: 'Stare nemodificată, eroare',
               });
             },

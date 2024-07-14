@@ -94,7 +94,7 @@ import { ToastModule } from 'primeng/toast';
             </p>
           </div>
 
-          @if(user.role === userRoles.Admin){
+          @if(user && (user.role === userRoles.Admin)){
           <p-button
             *ngIf="room.state === states.Free"
             label="Check-in"
@@ -109,6 +109,12 @@ import { ToastModule } from 'primeng/toast';
             [raised]="true"
             styleClass="state-btn"
             (click)="doCheckOut(room)"
+          ></p-button>
+
+          <p-button
+            icon="pi pi-refresh"
+            (click)="forceClosestReservation(room)"
+            styleClass="refresh-btn"
           ></p-button>
           }
         </div>
@@ -175,6 +181,43 @@ export class RoomDetailsComponent {
     }
   }
 
+  forceClosestReservation(room: Room) {
+    if (this.reservations && this.reservations.length > 0) {
+      const token = localStorage.getItem('token')!;
+
+      const currentDate = new Date();
+      let closestReservation: Reservation | null = null;
+      let closestDifference = Infinity;
+
+      for (let reservation of this.reservations) {
+        let startDate = new Date(reservation.startDate);
+        let endDate = new Date(reservation.endDate);
+
+        if (currentDate > startDate && currentDate < endDate) {
+          room.currentReservation = reservation;
+          this.roomService.editRoom(token, room._id!, room).subscribe();
+          return reservation;
+        }
+
+        if (startDate > currentDate) {
+          let dateDifference = Math.abs(
+            currentDate.getTime() - startDate.getTime()
+          );
+
+          if (dateDifference < closestDifference) {
+            closestDifference = dateDifference;
+            closestReservation = reservation;
+          }
+        }
+      }
+
+      room.currentReservation = closestReservation!;
+      this.roomService.editRoom(token, room._id!, room).subscribe();
+      return closestReservation;
+    }
+    return null;
+  }
+
   findClosestReservation(room: Room) {
     if (
       this.reservations &&
@@ -224,7 +267,6 @@ export class RoomDetailsComponent {
       room.state = this.states.IsBeingCleaned;
     } else if (room.state === this.states.IsBeingCleaned) {
       const currentDate = new Date();
-      console.log(room.currentReservation);
       if (
         room.currentReservation &&
         new Date(room.currentReservation.startDate) <= currentDate &&
@@ -246,42 +288,45 @@ export class RoomDetailsComponent {
     const token = localStorage.getItem('token')!;
 
     if (room.currentReservation) {
-      this.reservations = this.reservations
-        .sort((a, b) => {
-          return (
-            new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
-          );
-        })
-        .filter((reservation) =>
-          reservation.rooms.some((r) => r._id === room._id)
-        );
+      room.currentReservation.rooms.forEach((reservedRoomId) => {
+        this.reservationsService.getAllReservations(token).subscribe({
+          next: (allReservations) => {
+            const roomReservations = allReservations
+              .filter((reservation) =>
+                //@ts-ignore
+                reservation.rooms.some((r) => r._id === reservedRoomId)
+              )
+              .sort(
+                (a, b) =>
+                  new Date(a.startDate).getTime() -
+                  new Date(b.startDate).getTime()
+              );
 
-      room.currentReservation.rooms.forEach((reservedRoom) => {
-        // @ts-ignore
-        this.roomService.getRoomById(token, reservedRoom).subscribe({
-          next: (updatedRoom) => {
-            const currentIndex = this.reservations.findIndex(
+            const currentRoomReservationIndex = roomReservations.findIndex(
               (reservation) => reservation._id === room.currentReservation?._id
             );
 
-            if (
-              currentIndex !== -1 &&
-              currentIndex < this.reservations.length - 1
-            ) {
-              const nextReservation = this.reservations[currentIndex + 1];
+            //@ts-ignore
+            this.roomService.getRoomById(token, reservedRoomId).subscribe({
+              next: (updatedRoom) => {
+                if (
+                  currentRoomReservationIndex !== -1 &&
+                  currentRoomReservationIndex < roomReservations.length - 1
+                ) {
+                  const nextReservation =
+                    roomReservations[currentRoomReservationIndex + 1];
+                  updatedRoom.state = States.NeedsCleaning;
+                  updatedRoom.currentReservation = nextReservation;
+                } else {
+                  updatedRoom.state = States.NeedsCleaning;
+                  updatedRoom.currentReservation = null;
+                }
 
-              updatedRoom.state = States.NeedsCleaning;
-              updatedRoom.currentReservation = nextReservation;
-              this.roomService
-                .editRoom(token, updatedRoom._id!, updatedRoom)
-                .subscribe();
-            } else {
-              updatedRoom.state = States.NeedsCleaning;
-              updatedRoom.currentReservation = null;
-              this.roomService
-                .editRoom(token, updatedRoom._id!, updatedRoom)
-                .subscribe();
-            }
+                this.roomService
+                  .editRoom(token, updatedRoom._id!, updatedRoom)
+                  .subscribe();
+              },
+            });
           },
         });
       });

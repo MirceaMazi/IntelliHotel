@@ -8,6 +8,10 @@
   padding: 0;
 }
 
+.rating-field-wrapper {
+  display: flex;
+}
+
 .room-wrapper {
   display: flex;
 }

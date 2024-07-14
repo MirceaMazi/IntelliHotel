@@ -15,7 +15,13 @@ const createClient = async (req, res) => {
         .json({ message: "One or more reservation IDs are invalid." });
     }
 
-    const client = new Client({ name, email, phone, cnp, reservations });
+    const client = new Client({
+      name,
+      email,
+      phone,
+      cnp,
+      reservations,
+    });
 
     await client.save();
     res.status(201).json(client);
@@ -27,6 +33,7 @@ const createClient = async (req, res) => {
 const getAllClients = async (req, res) => {
   try {
     const clients = await Client.find().populate("reservations");
+
     res.status(200).json(clients);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -38,6 +45,7 @@ const getClientById = async (req, res) => {
     const client = await Client.findById(req.params.id).populate(
       "reservations"
     );
+
     if (!client) {
       return res.status(404).json({ message: "Client not found" });
     }
@@ -61,7 +69,7 @@ const updateClient = async (req, res) => {
         .json({ message: "One or more reservation IDs are invalid." });
     }
 
-    const client = await Client.findByIdAndUpdate(
+    const client = await Client.findById(
       req.params.id,
       { name, email, phone, cnp, reservations },
       { new: true, runValidators: true }

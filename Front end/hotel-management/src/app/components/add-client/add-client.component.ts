@@ -4,10 +4,12 @@ import { ReactiveFormsModule, Validators, FormBuilder } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { ClientService } from '../../services/client.service';
 import { RoomService } from '../../services/room.service';
+import { AuthService } from '../../services/auth.service';
 
 import { Client } from '../../interfaces/client';
 import { Reservation } from '../../interfaces/reservation';
-import { Room, States } from '../../interfaces/room';
+import { States } from '../../interfaces/room';
+import { User, userRoles } from '../../interfaces/user';
 
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -81,7 +83,8 @@ export class AddClientComponent {
     private formBuilder: FormBuilder,
     private clientService: ClientService,
     private messageService: MessageService,
-    private roomService: RoomService
+    private roomService: RoomService,
+    private authService: AuthService
   ) {}
 
   addClientForm = this.formBuilder.group({
@@ -177,6 +180,15 @@ export class AddClientComponent {
           });
         },
       });
+
+      const newUser: User = {
+        username: this.addClientForm.value.name! + '12345678',
+        email: this.addClientForm.value.email!,
+        password: '12341234',
+        role: userRoles.Client,
+      };
+
+      this.authService.createUser(token, newUser).subscribe();
     }
 
     this.clientService.clearClientToEdit();
