@@ -39,7 +39,7 @@ export class SchedulerComponent implements OnInit {
       right: 'resourceTimelineDay,resourceTimelineWeek,resourceTimelineMonth',
     },
     height: 600,
-    initialView: 'resourceTimelineMonth',
+    initialView: 'resourceTimelineWeek',
     eventTimeFormat: {
       hour: 'numeric',
       minute: '2-digit',

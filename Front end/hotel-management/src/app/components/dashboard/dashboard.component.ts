@@ -96,7 +96,7 @@ export class DashboardComponent {
         this.rooms = rooms;
         this.reservations = reservations.sort(
           (a, b) =>
-            new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+            new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
         );
         this.initializeCharts();
       });

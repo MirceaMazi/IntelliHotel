@@ -94,7 +94,10 @@ export class AddClientComponent {
       '',
       [Validators.required, Validators.minLength(10), Validators.maxLength(10)],
     ],
-    cnp: ['', Validators.required],
+    cnp: [
+      '',
+      [Validators.required, Validators.minLength(13), Validators.maxLength(13)],
+    ],
   });
 
   ngOnInit() {
