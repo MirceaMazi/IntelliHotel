@@ -9,10 +9,10 @@ Welcome to IntelliHotel, the smart hotel management application designed to stre
   - [Reservation Handling](#reservation-handling)
   - [Calendar](#calendar)
   - [Hotel Analytics](#hotel-analytics)
-  - [Host Reviews](#host-reviews)
-  [User Roles](#user-roles)
-  [Responsive design](#responsive-design)
-  [Context menu](#context-menu)
+  - [Host Reviews](#host-reviews)  
+  [User Roles](#user-roles)  
+  [Responsive design](#responsive-design)  
+  [Context menu](#context-menu)  
 
 ## Features
 
